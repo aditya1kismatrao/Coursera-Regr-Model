@@ -28,4 +28,5 @@ pairs(mtcars)
 
 #first model includes all available variables
 fit1 <- lm(mpg ~ ., data = mtcars)
+
 summary(fit1)
