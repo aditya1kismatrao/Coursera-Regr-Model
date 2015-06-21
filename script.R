@@ -40,3 +40,9 @@ fit2 <- step(fit1)
 
 summary(fit2)
 
+#diagnostics of the model
+
+par(mfrow=c(2,2))
+plot(fit2)
+
+

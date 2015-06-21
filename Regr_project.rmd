@@ -1,5 +1,5 @@
 ---
-title: "Coursera Regresion Models Project"
+title: "Coursera Regresion Models Project - Automatic or Manual transmission"
 author: "pskotarczak"
 date: "21 Jun 2015"
 output: pdf_document
@@ -7,74 +7,102 @@ output: pdf_document
 
 ## Executive Summary
 
+In this report we will analyze the mtcars dataset containing data from 32 cars which were 1973-1974 models to answer the question which of the transmission systems (automatic or manual) is better for MPG. The analysis concluded that the there is a significant difference in mean fuel consumptions between automatic and manual transmission. Our regression model shows that taking into account also weight of the cars and its acceleration, cars with manual transmission are more efficient regarding to fuel consumption. According to the model, for cars with the same weight and acceleration manual transmission adds about 2.9358 MPG compaired to automatic transmission. 
 
 ## The analysis
 
-1. Exploratory analysis.
+#1. Exploratory analysis.
 
-First we're doing basic data cleaning and exploratory analysis. 
+First we will load the data set and present its sample.
 
-```{r}
+```{r, results='hide'}
 data(mtcars)
+str(mtcars)
 head(mtcars)
 ```
 
-Gathering automatic and manual transmission data for determining which of the transmission systems is better for MPG
+Now we will do some basic data cleaning. We will process automatic and manual transmission data. 
 
 ```{r}
 auto <- mtcars$mpg[mtcars$am == 0]
-
 manu <- mtcars$mpg[mtcars$am == 1]
 
 ```
 
-Plotting the data:
-
-```{r, echo=FALSE}
-plot(mtcars$mpg, factor(mtcars$am))
-
-boxplot(auto, manu)
-
-```
-
-Above plots shows us, that manual transmission increases mpg. Now we have to check, if the difference is statistically significant. To do this we will perform a t.test for not paired means.
+Now we will plot the data in Figure 1 that can be found in the appendix. The plot shows us, that manual transmission increases mpg. Now we will check, if the difference is statistically significant. To do this we will perform a t.test for not paired means.
 
 ```{r}
-t.test(manu, auto)
+test <- t.test(manu, auto)
+test$p.value
+test$estimate
 ```
 
-The result of t.test confirms that the difference is significant with p-value equal 0.001374 meaning that the alternative hypothesis that difference in means is equal 0 is not true. Thus taking into account that mean of mpg for manual transmission is significantly greater than for automatic transmission, we can conclude that manual transmission is better for MPG. 
+The result of t.test confirms that the difference is significant with p-value equal 0.001374 meaning that the alternative hypothesis that difference in means is equal 0 is not true.
+
+#2. Model selection:
 
 Now we will try to confirm above findings with the same analysis but using regression model with dumb variables:
 
-```{r}
-fit <- lm(mpg ~ factor(am), data = mtcars)
-summary(fit)$coef
+```{r, results='hide'}
+fit1 <- lm(mpg ~ factor(am), data = mtcars)
+summary(fit1)$coef
 ```
 
-2. Model selection:
+From above we can see that on avarage the car with an automatic transmission has 17.147 mpg and for the manual transmission 7.245 mpg is added. R squared of the model is 0.3598 so it only exlpains about 36% of the variance of the MPG. This means that there are different variables that can also explain the change of mpg. 
 
-Now we will try to find the best regression model ...
+So now, we will construct full model with all available variables:
 
-First, we will construct model with all available variables:
-
-```{r}
-fiit2 <- lm(mpg ~ ., data = mtcars)
+```{r, results='hide'}
+fit2 <- lm(mpg ~ ., data = mtcars)
 summary(fit2)
 ```
 
-R-squared statistic of the model is pretty high, but none of the variables seams to be statistically significant according to p-values.
-To determine possibly important variables and compair the impact of different variables on mpg we will use pairs
+R-squared statistic of the model is 0.869 which means that the model explains about 87% of the variance of the MPG variable. Unfortunately none of the coefficients seams to be statistically significant according to p-values (none of the p-values is lower than 0.05).
+To determine significant variables we will use backward selection. Before we can plot the interactions between all variables using pairs function (Figure 2 in the appendix).
+
+Now we will try to select variables with the step function:
+
+```{r, results='hide'}
+fit3 <- step(fit2)
+summary(fit3)
+```
+
+The new model contains three variables: weight (wt), 1/4 mile time (qsec), and transmission (am). R squared value is 0.8497 which means, that the model explains about 85% of the variance of the MPG. All the coefficients are statistically significant with p-value below 0.05. 
+
+The above model shows that with weight and quarter mile time constant cars with manual transmission 2.9358 more MPG on average than cars with automatic transmission. 
+
+#3. Model diagnostics:
+
+Now we will plot the residuals and the Normal Q-Q to diagnose the model (Figure 3 in the appendix).
+We can see that the residuals do not reveal any patterns on the residuals vs fitted plot. Also the Normal Q-Q plot shows that residuals seems to be normally distributed. Thus we conclude that the basic assumptions for the linear regression are met. 
+
+
+
+#4. Appendix:
+
+#Figure 1:
+
+
+```{r, echo=FALSE}
+boxplot(mtcars$mpg ~ mtcars$am, xlab = "Transmission type (0 = Automatic, 1 = Manual)", ylab = "MPG", main="MPG by transmission type")
+```
+
+
+
+#Figure 2:
+
 
 ```{r, echo=FALSE}
 pairs(mtcars)
 ```
 
-Now we will try to select best model with step function:
 
-```{r}
-fit3 <- step(fit2)
-summary(fit3)
+
+#Figure 3:
+
+
+```{r, echo=FALSE}
+par(mfrow=c(2,2))
+plot(fit3)
 ```
 
-According to the new model, there are three variables used all statistically significant. The R-squared statistic for the new model is 0.8497 - lower than the first model but still satisfactory. 
