@@ -1,0 +1,80 @@
+---
+title: "Coursera Regresion Models Project"
+author: "pskotarczak"
+date: "21 Jun 2015"
+output: pdf_document
+---
+
+## Executive Summary
+
+
+## The analysis
+
+1. Exploratory analysis.
+
+First we're doing basic data cleaning and exploratory analysis. 
+
+```{r}
+data(mtcars)
+head(mtcars)
+```
+
+Gathering automatic and manual transmission data for determining which of the transmission systems is better for MPG
+
+```{r}
+auto <- mtcars$mpg[mtcars$am == 0]
+
+manu <- mtcars$mpg[mtcars$am == 1]
+
+```
+
+Plotting the data:
+
+```{r, echo=FALSE}
+plot(mtcars$mpg, factor(mtcars$am))
+
+boxplot(auto, manu)
+
+```
+
+Above plots shows us, that manual transmission increases mpg. Now we have to check, if the difference is statistically significant. To do this we will perform a t.test for not paired means.
+
+```{r}
+t.test(manu, auto)
+```
+
+The result of t.test confirms that the difference is significant with p-value equal 0.001374 meaning that the alternative hypothesis that difference in means is equal 0 is not true. Thus taking into account that mean of mpg for manual transmission is significantly greater than for automatic transmission, we can conclude that manual transmission is better for MPG. 
+
+Now we will try to confirm above findings with the same analysis but using regression model with dumb variables:
+
+```{r}
+fit <- lm(mpg ~ factor(am), data = mtcars)
+summary(fit)$coef
+```
+
+2. Model selection:
+
+Now we will try to find the best regression model ...
+
+First, we will construct model with all available variables:
+
+```{r}
+fiit2 <- lm(mpg ~ ., data = mtcars)
+summary(fit2)
+```
+
+R-squared statistic of the model is pretty high, but none of the variables seams to be statistically significant according to p-values.
+To determine possibly important variables and compair the impact of different variables on mpg we will use pairs
+
+```{r, echo=FALSE}
+pairs(mtcars)
+```
+
+Now we will try to select best model with step function:
+
+```{r}
+fit3 <- step(fit2)
+summary(fit3)
+```
+
+According to the new model, there are three variables used all statistically significant. The R-squared statistic for the new model is 0.8497 - lower than the first model but still satisfactory. 
